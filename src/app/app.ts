@@ -1,12 +1,10 @@
-import { Component, signal } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
+import { Component } from '@angular/core';
+import { TaskManagerComponent } from './components/taskmanager/taskmanager';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet],
-  templateUrl: './app.html',
-  styleUrl: './app.scss'
+  standalone: true,
+  imports: [TaskManagerComponent], 
+  template: `<app-task-manager></app-task-manager>`, 
 })
-export class App {
-  protected readonly title = signal('taskmanagerapp');
-}
+export class App {}

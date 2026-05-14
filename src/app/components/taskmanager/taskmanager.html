@@ -1,0 +1,52 @@
+<div class="task-manager">
+  <header>
+    <h1>Smart Task Manager</h1>
+  </header>
+
+  <section class="task-form">
+    <input 
+      type="text" 
+      class="task-input"
+      [(ngModel)]="newTaskTitle" 
+      placeholder="What needs to be done?" 
+      (keyup.enter)="onAddTask()"
+    >
+    <select class="task-select" [(ngModel)]="newTaskCategory">
+      @for (cat of categories; track cat) {
+        <option [value]="cat">{{ cat }}</option>
+      }
+    </select>
+    <button class="btn btn-primary" (click)="onAddTask()">Add Task</button>
+  </section>
+
+  <section class="task-filters">
+    <label for="filter">Filter by:</label>
+    <select id="filter" class="task-select" [(ngModel)]="currentFilter">
+      <option value="All">All Categories</option>
+      @for (cat of categories; track cat) {
+        <option [value]="cat">{{ cat }}</option>
+      }
+    </select>
+  </section>
+
+  <ul class="task-list">
+    @for (task of filteredTasks; track task.id) {
+      <li class="task-item" [class.completed]="task.completed">
+        <label class="task-content">
+          <input 
+            type="checkbox" 
+            [checked]="task.completed" 
+            (change)="taskService.toggleComplete(task.id)"
+          >
+          <span class="task-title">{{ task.title }}</span>
+          <span class="task-category">({{ task.category }})</span>
+        </label>
+        <button class="btn btn-danger" (click)="taskService.deleteTask(task.id)">Delete</button>
+      </li>
+    } @empty {
+      <div class="empty-state">
+        <p>No tasks found.</p>
+      </div>
+    }
+  </ul>
+</div>
