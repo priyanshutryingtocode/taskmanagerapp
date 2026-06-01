@@ -1,6 +1,14 @@
 <div class="task-manager">
   <header>
     <h1>Smart Task Manager</h1>
+    <div class="task-summary">
+      <span>{{ activeCount }} active</span>
+      <span>{{ completedCount }} completed</span>
+      <span>{{ completionPercent }}% done</span>
+    </div>
+    <div class="progress-track">
+      <div class="progress-fill" [style.width.%]="completionPercent"></div>
+    </div>
   </header>
 
   <section class="task-form">
@@ -16,32 +24,95 @@
         <option [value]="cat">{{ cat }}</option>
       }
     </select>
+    <select class="task-select" [(ngModel)]="newTaskPriority">
+      @for (priority of priorities; track priority) {
+        <option [value]="priority">{{ priority }}</option>
+      }
+    </select>
+    <input
+      type="date"
+      class="task-date"
+      [(ngModel)]="newTaskDueDate"
+    >
     <button class="btn btn-primary" (click)="onAddTask()">Add Task</button>
   </section>
 
   <section class="task-filters">
-    <label for="filter">Filter by:</label>
-    <select id="filter" class="task-select" [(ngModel)]="currentFilter">
+    <input
+      type="search"
+      class="task-search"
+      [(ngModel)]="searchTerm"
+      placeholder="Search tasks"
+    >
+    <select class="task-select" [(ngModel)]="currentFilter" aria-label="Filter by category">
       <option value="All">All Categories</option>
       @for (cat of categories; track cat) {
         <option [value]="cat">{{ cat }}</option>
       }
     </select>
+    <select class="task-select" [(ngModel)]="statusFilter">
+      <option value="All">All Statuses</option>
+      <option value="Active">Active</option>
+      <option value="Completed">Completed</option>
+    </select>
+    <button class="btn btn-secondary" (click)="taskService.clearCompleted()" [disabled]="completedCount === 0">
+      Clear Completed
+    </button>
   </section>
 
   <ul class="task-list">
     @for (task of filteredTasks; track task.id) {
-      <li class="task-item" [class.completed]="task.completed">
-        <label class="task-content">
-          <input 
-            type="checkbox" 
-            [checked]="task.completed" 
-            (change)="taskService.toggleComplete(task.id)"
-          >
-          <span class="task-title">{{ task.title }}</span>
-          <span class="task-category">({{ task.category }})</span>
-        </label>
-        <button class="btn btn-danger" (click)="taskService.deleteTask(task.id)">Delete</button>
+      <li class="task-item" [class.completed]="task.completed" [class.overdue]="isOverdue(task)">
+        @if (editingTaskId === task.id) {
+          <div class="edit-panel">
+            <input
+              type="text"
+              class="task-input"
+              [(ngModel)]="editTitle"
+              (keyup.enter)="saveEdit()"
+              aria-label="Edit task title"
+            >
+            <select class="task-select" [(ngModel)]="editCategory">
+              @for (cat of categories; track cat) {
+                <option [value]="cat">{{ cat }}</option>
+              }
+            </select>
+            <select class="task-select" [(ngModel)]="editPriority">
+              @for (priority of priorities; track priority) {
+                <option [value]="priority">{{ priority }}</option>
+              }
+            </select>
+            <input type="date" class="task-date" [(ngModel)]="editDueDate">
+            <div class="task-actions">
+              <button class="btn btn-primary" (click)="saveEdit()">Save</button>
+              <button class="btn btn-ghost" (click)="cancelEdit()">Cancel</button>
+            </div>
+          </div>
+        } @else {
+          <label class="task-content">
+            <input 
+              type="checkbox" 
+              [checked]="task.completed" 
+              (change)="taskService.toggleComplete(task.id)"
+            >
+            <span class="task-details">
+              <span class="task-title">{{ task.title }}</span>
+              <span class="task-meta">
+                <span class="task-category">{{ task.category }}</span>
+                <span class="task-priority priority-{{ task.priority.toLowerCase() }}">{{ task.priority }}</span>
+                @if (task.dueDate) {
+                  <span class="task-date-label" [class.overdue-label]="isOverdue(task)">
+                    Due {{ task.dueDate }}
+                  </span>
+                }
+              </span>
+            </span>
+          </label>
+          <div class="task-actions">
+            <button class="btn btn-secondary" (click)="startEdit(task)">Edit</button>
+            <button class="btn btn-danger" (click)="taskService.deleteTask(task.id)">Delete</button>
+          </div>
+        }
       </li>
     } @empty {
       <div class="empty-state">
